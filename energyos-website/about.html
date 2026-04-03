@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — EnergyOS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #E85D04;
+      --orange-dark: #c44e03;
+      --black: #0a0a0a;
+      --dark: #111111;
+      --dark2: #1a1a1a;
+      --white: #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 64px;
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1f1f1f;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--white);
+    }
+
+    .logo-text {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span { color: var(--orange); }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    nav ul a {
+      text-decoration: none;
+      color: #ccc;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    nav ul a:hover, nav ul a.active { color: var(--orange); }
+
+    .nav-cta {
+      background: var(--orange) !important;
+      color: var(--white) !important;
+      padding: 8px 20px !important;
+      border-radius: 6px !important;
+      font-weight: 600 !important;
+      transition: background 0.2s !important;
+    }
+
+    .nav-cta:hover { background: var(--orange-dark) !important; }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      padding: 140px 2rem 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(232,93,4,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .section-label {
+      display: inline-block;
+      color: var(--orange);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+    }
+
+    h1 span { color: var(--orange); }
+
+    .page-header p {
+      color: #888;
+      font-size: 1.1rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* CONTAINER */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+    /* BIO SECTION */
+    .bio-section {
+      padding: 0 2rem 80px;
+    }
+
+    .bio-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    /* PHOTOS */
+    .photo-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: sticky;
+      top: 88px;
+      align-items: center;
+    }
+
+    .photo-main {
+      width: min(260px, 100%);
+      aspect-ratio: 1;
+      background: var(--dark2);
+      border: 3px solid rgba(232,93,4,0.45);
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 40px rgba(232,93,4,0.15);
+      flex-shrink: 0;
+    }
+
+    .photo-main img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+    }
+
+    .photo-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #444;
+    }
+
+    .photo-placeholder .icon { font-size: 2.5rem; }
+    .photo-placeholder span { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.5px; }
+
+    .photo-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: min(260px, 100%);
+    }
+
+    .photo-small {
+      aspect-ratio: 1;
+      background: var(--dark2);
+      border: 3px solid rgba(232,93,4,0.35);
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 24px rgba(232,93,4,0.1);
+    }
+
+    .photo-small img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center; /* default; overridden per-image below */
+      display: block;
+    }
+
+    .photo-small.pos-30 img { object-position: top center; }
+    .photo-small.pos-center img { object-position: center center; }
+
+    /* BIO CONTENT */
+    .bio-content {}
+
+    .founder-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(232,93,4,0.12);
+      border: 1px solid rgba(232,93,4,0.25);
+      color: var(--orange);
+      padding: 5px 14px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .bio-content h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .bio-content h2 span { color: var(--orange); }
+
+    .bio-body p {
+      color: #aaa;
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 1.2rem;
+    }
+
+    .bio-body p strong { color: var(--white); }
+
+    .stats-row {
+      display: flex;
+      gap: 2rem;
+      margin: 2.5rem 0;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      text-align: left;
+    }
+
+    .stat-num {
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--orange);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.82rem;
+      margin-top: 2px;
+    }
+
+    /* VIDEO */
+    .video-section {
+      padding: 0 2rem 100px;
+    }
+
+    .video-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .video-inner h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .video-inner p {
+      color: #888;
+      margin-bottom: 2.5rem;
+    }
+
+    .video-placeholder {
+      background: var(--dark2);
+      border: 1px solid #222;
+      border-radius: 20px;
+      aspect-ratio: 16/9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .video-placeholder:hover { border-color: var(--orange); }
+
+    .video-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(232,93,4,0.08) 0%, transparent 70%);
+    }
+
+    .play-btn {
+      width: 72px;
+      height: 72px;
+      background: var(--orange);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .video-placeholder:hover .play-btn {
+      transform: scale(1.1);
+      box-shadow: 0 0 40px rgba(232,93,4,0.4);
+    }
+
+    .play-btn svg {
+      width: 28px;
+      height: 28px;
+      fill: white;
+      margin-left: 4px;
+    }
+
+    .video-label {
+      color: #666;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .canva-embed-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #222;
+      background: #111;
+    }
+
+    /* DEMO SECTION */
+    .demo-section {
+      padding: 0 2rem 100px;
+    }
+
+    .demo-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .demo-inner h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .demo-inner > p {
+      color: #888;
+      margin-bottom: 2.5rem;
+    }
+
+    .phone-frame {
+      width: 280px;
+      margin: 0 auto;
+      background: #111;
+      border: 2px solid #2a2a2a;
+      border-radius: 40px;
+      padding: 14px;
+      box-shadow: 0 0 60px rgba(232,93,4,0.12), 0 32px 64px rgba(0,0,0,0.5);
+      position: relative;
+    }
+
+    .phone-notch {
+      width: 80px;
+      height: 10px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      margin: 0 auto 14px;
+    }
+
+    .phone-screen {
+      background: #0a0a0a;
+      border-radius: 28px;
+      overflow: hidden;
+      min-height: 460px;
+    }
+
+    /* App top bar */
+    .app-bar {
+      background: #111;
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #1f1f1f;
+    }
+
+    .app-bar-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+
+    .app-bar-logo span { color: var(--orange); }
+
+    .app-time { color: #555; font-size: 0.75rem; }
+
+    /* Score ring */
+    .score-section {
+      padding: 20px 16px 14px;
+      text-align: center;
+    }
+
+    .score-ring-wrap {
+      width: 110px;
+      height: 110px;
+      position: relative;
+      margin: 0 auto 10px;
+    }
+
+    .score-ring-wrap svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+    .ring-bg { fill: none; stroke: #1f1f1f; stroke-width: 8; }
+    .ring-fill {
+      fill: none;
+      stroke: var(--orange);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 314;
+      stroke-dashoffset: 78;
+      transition: stroke-dashoffset 1s ease;
+    }
+
+    .ring-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .ring-num {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--orange);
+      line-height: 1;
+    }
+
+    .ring-label { font-size: 0.55rem; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .score-desc { color: #666; font-size: 0.72rem; }
+
+    /* Metrics */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      padding: 0 12px 14px;
+    }
+
+    .metric-chip {
+      background: #111;
+      border: 1px solid #1f1f1f;
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .metric-chip .val { font-size: 0.9rem; font-weight: 800; color: var(--white); }
+    .metric-chip .lbl { font-size: 0.58rem; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+    .metric-chip .val.good { color: #4ade80; }
+    .metric-chip .val.warn { color: #facc15; }
+
+    /* Nudge card */
+    .nudge-card {
+      margin: 0 12px 12px;
+      background: rgba(232,93,4,0.1);
+      border: 1px solid rgba(232,93,4,0.25);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .nudge-card:hover { background: rgba(232,93,4,0.16); }
+
+    .nudge-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .nudge-icon { font-size: 1.1rem; }
+    .nudge-title { font-size: 0.82rem; font-weight: 700; color: var(--white); }
+    .nudge-badge {
+      margin-left: auto;
+      background: var(--orange);
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .nudge-body { color: #888; font-size: 0.72rem; line-height: 1.5; }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      border-top: 1px solid #1f1f1f;
+      background: #111;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      font-size: 0.6rem;
+      color: #444;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .tab.active { color: var(--orange); }
+    .tab-icon { font-size: 1rem; display: block; margin-bottom: 2px; }
+
+    /* Demo controls */
+    .demo-controls {
+      margin-top: 2rem;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .demo-ctrl-btn {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #aaa;
+      padding: 9px 18px;
+      border-radius: 100px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .demo-ctrl-btn:hover, .demo-ctrl-btn.active {
+      border-color: var(--orange);
+      color: var(--orange);
+      background: rgba(232,93,4,0.08);
+    }
+
+    /* VALUES */
+    .values-section {
+      padding: 0 2rem 100px;
+      background: var(--dark2);
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .values-section .inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 0;
+    }
+
+    .values-section h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+    }
+
+    .value-card {
+      background: var(--black);
+      border: 1px solid #222;
+      border-radius: 14px;
+      padding: 1.8rem;
+      transition: border-color 0.2s;
+    }
+
+    .value-card:hover { border-color: rgba(232,93,4,0.35); }
+
+    .value-icon { font-size: 1.8rem; margin-bottom: 0.8rem; }
+    .value-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .value-card p { color: #777; font-size: 0.88rem; line-height: 1.6; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid #1f1f1f;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .footer-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 1rem;
+      text-decoration: none;
+      color: var(--white);
+    }
+
+    footer nav { margin-bottom: 1.5rem; }
+
+    footer nav a {
+      color: #666;
+      text-decoration: none;
+      font-size: 0.88rem;
+      margin: 0 1rem;
+      transition: color 0.2s;
+    }
+
+    footer nav a:hover { color: var(--orange); }
+    footer p { color: #444; font-size: 0.82rem; }
+
+    @media (max-width: 768px) {
+      nav ul { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--black); flex-direction: column; padding: 1.5rem; gap: 1rem; border-bottom: 1px solid #1f1f1f; }
+      nav ul.open { display: flex; }
+      .hamburger { display: flex; }
+      .bio-grid { grid-template-columns: 1fr; }
+      .photo-stack { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="8" fill="#E85D04"/>
+      <polyline points="4,18 9,18 12,10 16,26 20,14 23,21 26,18 32,18"
+        fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-text">Energy<span>OS</span></span>
+  </a>
+  <ul id="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="about.html" class="active">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="index.html#waitlist" class="nav-cta">Join Waitlist</a></li>
+  </ul>
+  <div class="hamburger" onclick="toggleNav()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="section-label">The Founder</div>
+  <h1>Meet the person<br>behind <span>EnergyOS</span></h1>
+  <p>Built from lived experience — late nights, burnout, and a determination to fix it.</p>
+</div>
+
+<!-- BIO SECTION -->
+<section class="bio-section">
+  <div class="bio-grid">
+    <!-- PHOTOS -->
+    <div class="photo-stack">
+      <div class="photo-main">
+        <img src="josh1.jpg" alt="Josh Virostek" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="photo-placeholder">
+          <div class="icon">📸</div>
+          <span>josh1.jpg</span>
+        </div>
+      </div>
+      <div class="photo-row">
+        <div class="photo-small pos-center">
+          <img src="josh2.jpg" alt="Josh Virostek" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="photo-placeholder">
+            <div class="icon">📸</div>
+            <span>josh2.jpg</span>
+          </div>
+        </div>
+        <div class="photo-small pos-30">
+          <img src="josh3.jpg" alt="Josh Virostek" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+          <div class="photo-placeholder">
+            <div class="icon">📸</div>
+            <span>josh3.jpg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BIO TEXT -->
+    <div class="bio-content">
+      <div class="founder-tag">⚡ Founder & Builder</div>
+      <h2>Josh<br><span>Virostek</span></h2>
+
+      <div class="bio-body">
+        <p>
+          <strong>I didn't build EnergyOS because I had a great idea in a boardroom.</strong> I built it because I watched myself — and everyone around me — collapse under the pressure of college life with zero tools to actually manage it.
+        </p>
+        <p>
+          Junior year nearly broke me. I was pulling all-nighters, running on caffeine and anxiety, and checking every productivity app imaginable. None of them could tell me <strong>why</strong> I felt like garbage at 2pm or why my best study sessions happened randomly at 11pm.
+        </p>
+        <p>
+          Then I started digging into the research on heart rate variability, circadian rhythms, and sleep debt. I started logging my Apple Watch data and noticed patterns my calendar app would never catch. I built a crude spreadsheet model to predict my "peak windows" — and my grades jumped.
+        </p>
+        <p>
+          <strong>That spreadsheet became EnergyOS.</strong> A real-time, AI-powered operating system for your daily energy — not your schedule.
+        </p>
+        <p>
+          I'm a college student, not a VC-backed executive. I'm building this for us — the students who are trying their hardest and still feel like they're losing.
+        </p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-num">3+</div>
+          <div class="stat-label">Years of health data<br>analyzed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">200+</div>
+          <div class="stat-label">Students on<br>the waitlist</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">1</div>
+          <div class="stat-label">College student<br>on a mission</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO SECTION -->
+<section class="video-section">
+  <div class="video-inner">
+    <div class="section-label">Founder Story</div>
+    <h2>Watch the story behind EnergyOS</h2>
+    <p>Josh breaks down why he built EnergyOS and what it means for students everywhere.</p>
+
+    <div class="canva-embed-wrap">
+      <iframe
+        loading="lazy"
+        style="position:absolute;width:100%;height:100%;top:0;left:0;border:none;"
+        src="https://www.canva.com/design/DAHFA2bAEDk/2LmVZeGsDxeYCO4umTY2Jw/watch?embed"
+        allowfullscreen
+        allow="fullscreen">
+      </iframe>
+    </div>
+    <p style="color:#555;font-size:0.78rem;margin-top:0.8rem;">Made with Canva · <a href="https://www.canva.com/design/DAHFA2bAEDk/2LmVZeGsDxeYCO4umTY2Jw/watch" target="_blank" rel="noopener" style="color:var(--orange);text-decoration:none;">Open full screen ↗</a></p>
+  </div>
+</section>
+
+<!-- APP DEMO -->
+<section class="demo-section">
+  <div class="demo-inner">
+    <div class="section-label">App Preview</div>
+    <h2>See EnergyOS in action</h2>
+    <p>A sneak peek at the app experience. Tap the states below to explore.</p>
+
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+
+        <!-- App bar -->
+        <div class="app-bar">
+          <div class="app-bar-logo">
+            <svg width="16" height="16" viewBox="0 0 36 36" fill="none">
+              <rect width="36" height="36" rx="8" fill="#E85D04"/>
+              <polyline points="4,18 9,18 12,10 16,26 20,14 23,21 26,18 32,18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Energy<span>OS</span>
+          </div>
+          <div class="app-time" id="demo-time">9:41 AM</div>
+        </div>
+
+        <!-- Score ring -->
+        <div class="score-section">
+          <div class="score-ring-wrap">
+            <svg viewBox="0 0 110 110">
+              <circle class="ring-bg" cx="55" cy="55" r="50"/>
+              <circle class="ring-fill" id="demo-ring" cx="55" cy="55" r="50"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-num" id="demo-score">78</div>
+              <div class="ring-label">Energy</div>
+            </div>
+          </div>
+          <div class="score-desc" id="demo-desc">Peak window in 12 min · HRV 42ms</div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="metrics-row">
+          <div class="metric-chip">
+            <div class="val good" id="m1">64</div>
+            <div class="lbl">BPM</div>
+          </div>
+          <div class="metric-chip">
+            <div class="val warn" id="m2">72%</div>
+            <div class="lbl">Sleep</div>
+          </div>
+          <div class="metric-chip">
+            <div class="val good" id="m3">Low</div>
+            <div class="lbl">Burnout</div>
+          </div>
+        </div>
+
+        <!-- Nudge -->
+        <div class="nudge-card" id="demo-nudge">
+          <div class="nudge-header">
+            <div class="nudge-icon" id="nudge-icon">⚡</div>
+            <div class="nudge-title" id="nudge-title">Focus window opens soon</div>
+            <div class="nudge-badge" id="nudge-badge">Now</div>
+          </div>
+          <div class="nudge-body" id="nudge-body">Your HRV and heart rate are optimal. Lock in a 90-min deep work block starting at 10 AM.</div>
+        </div>
+
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <div class="tab active"><span class="tab-icon">⚡</span>Today</div>
+          <div class="tab"><span class="tab-icon">📊</span>Trends</div>
+          <div class="tab"><span class="tab-icon">😴</span>Sleep</div>
+          <div class="tab"><span class="tab-icon">⚙️</span>Settings</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="demo-controls">
+      <button class="demo-ctrl-btn active" onclick="setDemoState(this,'peak')">⚡ Peak Focus</button>
+      <button class="demo-ctrl-btn" onclick="setDemoState(this,'spiral')">🌀 Distraction Spiral</button>
+      <button class="demo-ctrl-btn" onclick="setDemoState(this,'burnout')">🔥 Burnout Risk</button>
+      <button class="demo-ctrl-btn" onclick="setDemoState(this,'nap')">😴 Nap Window</button>
+    </div>
+  </div>
+</section>
+
+<!-- VALUES -->
+<section class="values-section">
+  <div class="inner">
+    <h2>What EnergyOS stands for</h2>
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="value-icon">🎯</div>
+        <h3>Student-First</h3>
+        <p>Every feature is designed around the real constraints of college life — no budget, no sleep, high stakes.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">🔬</div>
+        <h3>Science-Backed</h3>
+        <p>Built on peer-reviewed research in sleep science, HRV, chronobiology, and cognitive performance.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">🔒</div>
+        <h3>Privacy-First</h3>
+        <p>Your health data stays on your device. We will never sell your biometric data. Period.</p>
+      </div>
+      <div class="value-card">
+        <div class="value-icon">⚡</div>
+        <h3>Radical Simplicity</h3>
+        <p>No 47-step systems. Just one score, a few nudges, and the focus to actually do the work.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="index.html" class="footer-logo">
+    <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="8" fill="#E85D04"/>
+      <polyline points="4,18 9,18 12,10 16,26 20,14 23,21 26,18 32,18"
+        fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span style="font-size:1.2rem;font-weight:800;">Energy<span style="color:#E85D04">OS</span></span>
+  </a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <p>&copy; 2026 EnergyOS. Built by Josh Virostek. All rights reserved.</p>
+</footer>
+
+<script>
+  function toggleNav() {
+    document.getElementById('nav-links').classList.toggle('open');
+  }
+
+  // Live clock
+  function updateClock() {
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    document.getElementById('demo-time').textContent = h + ':' + String(m).padStart(2,'0') + ' ' + ampm;
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
+
+  // Ring: dashoffset = 314 * (1 - score/100)
+  function setRing(score) {
+    const offset = 314 * (1 - score / 100);
+    document.getElementById('demo-ring').style.strokeDashoffset = offset;
+    // color
+    const color = score >= 70 ? '#E85D04' : score >= 45 ? '#facc15' : '#ef4444';
+    document.getElementById('demo-ring').style.stroke = color;
+    document.getElementById('demo-score').style.color = color;
+  }
+
+  const states = {
+    peak: {
+      score: 78, desc: 'Peak window in 12 min · HRV 42ms',
+      m1: ['64','good'], m2: ['72%','warn'], m3: ['Low','good'],
+      icon: '⚡', title: 'Focus window opens soon', badge: 'Now',
+      body: 'Your HRV and heart rate are optimal. Lock in a 90-min deep work block starting at 10 AM.',
+      badgeColor: '#E85D04'
+    },
+    spiral: {
+      score: 44, desc: 'Distraction detected · 47 min unfocused',
+      m1: ['79','warn'], m2: ['58%','warn'], m3: ['Med','warn'],
+      icon: '🌀', title: 'Distraction spiral detected', badge: 'Alert',
+      body: 'You\'ve been context-switching for 47 minutes. Take a 10-min walk to break the loop.',
+      badgeColor: '#facc15'
+    },
+    burnout: {
+      score: 28, desc: 'High burnout risk · Sleep debt +62 min',
+      m1: ['91','bad'], m2: ['41%','bad'], m3: ['High','bad'],
+      icon: '🔥', title: 'Burnout risk is high', badge: 'Urgent',
+      body: 'Sleep debt is critical. Reschedule non-essential tasks and prioritize 7+ hrs tonight.',
+      badgeColor: '#ef4444'
+    },
+    nap: {
+      score: 55, desc: 'Nap window open · Circadian dip active',
+      m1: ['71','warn'], m2: ['65%','warn'], m3: ['Low','good'],
+      icon: '😴', title: '20-min power nap recommended', badge: 'Optimal',
+      body: 'Your circadian dip is active. A 20-min nap now won\'t affect tonight\'s sleep.',
+      badgeColor: '#818cf8'
+    }
+  };
+
+  function setDemoState(btn, key) {
+    document.querySelectorAll('.demo-ctrl-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const s = states[key];
+    setRing(s.score);
+    document.getElementById('demo-score').textContent = s.score;
+    document.getElementById('demo-desc').textContent = s.desc;
+
+    const [v1, c1] = s.m1, [v2, c2] = s.m2, [v3, c3] = s.m3;
+    const m1 = document.getElementById('m1');
+    const m2 = document.getElementById('m2');
+    const m3 = document.getElementById('m3');
+    m1.textContent = v1; m1.className = 'val ' + c1;
+    m2.textContent = v2; m2.className = 'val ' + c2;
+    m3.textContent = v3; m3.className = 'val ' + c3;
+
+    document.getElementById('nudge-icon').textContent = s.icon;
+    document.getElementById('nudge-title').textContent = s.title;
+    document.getElementById('nudge-body').textContent = s.body;
+    const badge = document.getElementById('nudge-badge');
+    badge.textContent = s.badge;
+    badge.style.background = s.badgeColor;
+
+    const nudge = document.getElementById('demo-nudge');
+    nudge.style.borderColor = s.badgeColor + '55';
+    nudge.style.background = s.badgeColor + '18';
+  }
+
+  // Init ring on load
+  setRing(78);
+</script>
+</body>
+</html>
