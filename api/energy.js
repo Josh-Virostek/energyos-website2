@@ -8,78 +8,18 @@ module.exports = async function handler(req, res) {
   const { checkin, schedule } = req.body;
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-  const scheduleContext = schedule
-    ? `
-USER'S FIXED SCHEDULE TODAY (${today}):
-- Wake time: ${schedule.wakeTime}
-- Bedtime: ${schedule.sleepTime}
-- Fixed commitments today: ${schedule.commitments || 'None provided'}
-Build the schedule strictly around these — never suggest activities during fixed blocks.
-`
-    : '';
+  const prompt = `You are EnergyOS. Analyze this check-in and return ONLY a JSON object, no other text.
 
-  const prompt = `You are EnergyOS, an AI energy coach. Analyze this check-in data and generate a realistic personalized daily schedule.
-${scheduleContext}
+Data: energy=${checkin.energy}/10, mood=${checkin.mood}/10, stress=${checkin.stress}/10, focus=${checkin.focus}/10${checkin.bpm ? ', bpm=' + checkin.bpm : ''}, sleep=${checkin.sleepHours}hrs (${checkin.sleepQuality}), woke=${checkin.wokeUpFeeling}, meal=${checkin.lastMeal} ${checkin.lastMealWhen}, hydration=${checkin.hydration}, caffeine=${checkin.caffeine} ${checkin.caffeineWhen}, nicotine=${checkin.nicotine}, alcohol=${checkin.alcohol}, body=${checkin.physicalFeeling}, sick=${checkin.sick}, last workout=${checkin.lastWorkout}, social battery=${checkin.socialBattery}, motivation=${checkin.motivation}${checkin.notes ? ', notes=' + checkin.notes : ''}
 
-CHECK-IN DATA:
-How they feel:
-- Energy: ${checkin.energy}/10
-- Mood: ${checkin.mood}/10
-- Stress: ${checkin.stress}/10
-- Focus: ${checkin.focus}/10
-${checkin.bpm ? `- Heart rate: ${checkin.bpm} BPM` : ''}
+Today is ${today}.${schedule && schedule.commitments ? ' Fixed commitments: ' + schedule.commitments + '. Build schedule around these.' : ''}${schedule && schedule.wakeTime !== 'Not specified' ? ' Wake: ' + schedule.wakeTime + ', Bed: ' + schedule.sleepTime + '.' : ''}
 
-Sleep:
-- Hours slept: ${checkin.sleepHours}
-- Sleep quality: ${checkin.sleepQuality}
-- Woke up feeling: ${checkin.wokeUpFeeling}
+Rules: predict caffeine crashes (peaks 1hr, crashes 4-6hr after); alcohol/nicotine = lower energy; low social battery = no social events; high stress = decompression; sore body = no gym; never deep work if energy+focus both under 5; schedule nap if under 6hrs sleep.
 
-Food & hydration:
-- Last meal: ${checkin.lastMeal}
-- Ate: ${checkin.lastMealWhen}
-- Hydration: ${checkin.hydration}
+Return this exact JSON:
+{"score":75,"summary":"Two sentence summary.","alerts":["alert if any"],"schedule":[{"time":"9:00 AM","activity":"activity name","category":"deep_work","reason":"one sentence"}],"tip":"one tip"}
 
-Substances (affects energy windows):
-- Caffeine: ${checkin.caffeine} — consumed ${checkin.caffeineWhen}
-- Nicotine: ${checkin.nicotine}
-- Alcohol: ${checkin.alcohol}
-
-Body & recovery:
-- Physical feeling: ${checkin.physicalFeeling}
-- Sick/unwell: ${checkin.sick}
-- Last workout: ${checkin.lastWorkout}
-
-Mental & social:
-- Social battery: ${checkin.socialBattery}
-- Motivation: ${checkin.motivation}
-${checkin.notes ? `- Notes: ${checkin.notes}` : ''}
-
-SCHEDULING RULES:
-- Use caffeine timing to predict energy crashes (peaks ~1hr after, crashes ~4-6hrs after)
-- Nicotine/alcohol from recently = lower baseline energy
-- High BPM at rest = stress/fatigue signal
-- Low social battery = no social events, solo work only
-- High stress = schedule decompression, no high-stakes tasks
-- Sore body = no gym, light movement instead
-- Never schedule deep work when energy + focus are both below 5
-- Schedule gym only if body feels ready
-- Schedule rest/nap if sleep was poor (under 6hrs or bad quality)
-
-Respond in this exact JSON format only, no markdown:
-{
-  "score": <0-100>,
-  "summary": "<2 sentences about their energy state and key factors>",
-  "alerts": ["<red flags like dehydration, crash window, alcohol impact>"],
-  "schedule": [
-    {
-      "time": "<e.g. 9:00 AM>",
-      "activity": "<specific activity>",
-      "category": "<deep_work|light_work|gym|rest|social|food|recovery>",
-      "reason": "<1 sentence why this fits their energy>"
-    }
-  ],
-  "tip": "<one specific actionable tip based on their data>"
-}`;
+Categories must be one of: deep_work, light_work, gym, rest, social, food, recovery. Include 5-8 schedule items.`;
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -90,8 +30,8 @@ Respond in this exact JSON format only, no markdown:
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 800,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
@@ -99,17 +39,17 @@ Respond in this exact JSON format only, no markdown:
     const data = await response.json();
 
     if (!response.ok || !data.content || !data.content[0]) {
-      return res.status(500).json({ error: 'Anthropic API error', detail: JSON.stringify(data) });
+      return res.status(500).json({ error: 'Anthropic error', detail: JSON.stringify(data).slice(0, 200) });
     }
 
-    const text = data.content[0].text;
+    const text = data.content[0].text.trim();
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
-      return res.status(500).json({ error: 'No JSON in response', raw: text.slice(0, 300) });
+      return res.status(500).json({ error: 'No JSON found', raw: text.slice(0, 200) });
     }
     const result = JSON.parse(match[0]);
     res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-}
+};
