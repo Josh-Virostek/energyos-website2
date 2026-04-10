@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Energy Check-In — EnergyOS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --orange: #E85D04;
+      --orange-dark: #c44e03;
+      --black: #0a0a0a;
+      --dark: #111111;
+      --dark2: #1a1a1a;
+      --white: #ffffff;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--black); color: var(--white); line-height: 1.6; min-height: 100vh; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 64px;
+      background: rgba(10,10,10,0.97); backdrop-filter: blur(16px);
+      border-bottom: 1px solid #1f1f1f;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--white); }
+    .logo-text { font-size: 1.4rem; font-weight: 800; }
+    .logo-text span { color: var(--orange); }
+    nav ul { display: flex; list-style: none; gap: 2rem; align-items: center; }
+    nav ul a { text-decoration: none; color: #ccc; font-size: 0.95rem; font-weight: 500; transition: color 0.2s; }
+    nav ul a:hover, nav ul a.active { color: var(--orange); }
+    .nav-cta { background: var(--orange) !important; color: var(--white) !important; padding: 8px 20px !important; border-radius: 6px !important; font-weight: 600 !important; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: var(--white); border-radius: 2px; }
+    footer nav { position: static; background: none; border: none; box-shadow: none; height: auto; padding: 0; display: block; backdrop-filter: none; margin-bottom: 1.5rem; }
+
+    /* PAGE */
+    .page-wrap { max-width: 680px; margin: 0 auto; padding: 100px 2rem 80px; }
+
+    /* PROGRESS */
+    .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .progress-label { color: #888; font-size: 0.85rem; }
+    .progress-bar { height: 3px; background: #1a1a1a; border-radius: 2px; margin-bottom: 40px; }
+    .progress-fill { height: 3px; background: var(--orange); border-radius: 2px; transition: width 0.4s ease; }
+
+    /* SECTION HEADER */
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px; padding-bottom: 16px;
+      border-bottom: 1px solid #1f1f1f;
+    }
+    .section-icon { font-size: 1.4rem; }
+    .section-title { font-size: 1.1rem; font-weight: 700; color: var(--white); }
+    .section-subtitle { font-size: 0.85rem; color: #666; margin-top: 2px; }
+
+    /* QUESTION */
+    .question-group { margin-bottom: 32px; }
+    .question-label { font-size: 1rem; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+    .question-hint { font-size: 0.82rem; color: #666; margin-bottom: 14px; }
+    .optional-tag { display: inline-block; font-size: 0.72rem; color: var(--orange); font-weight: 600; background: rgba(232,93,4,0.1); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+
+    /* SCALE */
+    .scale-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .scale-btn {
+      width: 48px; height: 48px; border-radius: 10px;
+      border: 1px solid #2a2a2a; background: #111;
+      color: #888; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .scale-btn:hover { border-color: var(--orange); color: var(--orange); }
+    .scale-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+    .scale-ends { display: flex; justify-content: space-between; margin-top: 6px; }
+    .scale-ends span { font-size: 0.75rem; color: #444; }
+
+    /* CHOICE */
+    .choice-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .choice-btn {
+      padding: 14px 16px; border-radius: 10px;
+      border: 1px solid #2a2a2a; background: #111;
+      color: #888; font-size: 0.95rem; text-align: left;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .choice-btn:hover { border-color: var(--orange); color: #ccc; }
+    .choice-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 600; }
+
+    /* TEXT INPUT */
+    .text-input {
+      width: 100%; background: #111; color: var(--white);
+      border: 1px solid #2a2a2a; border-radius: 10px;
+      padding: 14px 16px; font-size: 0.95rem; font-family: inherit;
+      resize: vertical; min-height: 100px; transition: border-color 0.2s;
+    }
+    .text-input:focus { outline: none; border-color: var(--orange); }
+    .text-input::placeholder { color: #555; }
+
+    /* NUMBER INPUT */
+    .number-input {
+      width: 160px; background: #111; color: var(--white);
+      border: 1px solid #2a2a2a; border-radius: 10px;
+      padding: 14px 16px; font-size: 1.4rem; font-weight: 700;
+      text-align: center; font-family: inherit; transition: border-color 0.2s;
+    }
+    .number-input:focus { outline: none; border-color: var(--orange); }
+    .number-input::placeholder { color: #555; font-size: 1rem; font-weight: 400; }
+
+    /* SCHEDULE INPUT */
+    .schedule-fields { display: grid; gap: 12px; }
+    .schedule-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .schedule-input {
+      width: 100%; background: #111; color: var(--white);
+      border: 1px solid #2a2a2a; border-radius: 10px;
+      padding: 12px 14px; font-size: 0.9rem; font-family: inherit; transition: border-color 0.2s;
+    }
+    .schedule-input:focus { outline: none; border-color: var(--orange); }
+    .schedule-input::placeholder { color: #555; }
+    .schedule-field-label { font-size: 0.8rem; color: #666; margin-bottom: 6px; }
+
+    /* SUBMIT */
+    .submit-btn {
+      width: 100%; background: var(--orange); color: #fff;
+      border: none; border-radius: 12px; padding: 18px;
+      font-size: 1rem; font-weight: 700; cursor: pointer;
+      transition: background 0.2s; margin-top: 16px;
+    }
+    .submit-btn:hover { background: var(--orange-dark); }
+    .submit-btn:disabled { background: #333; cursor: not-allowed; }
+
+    /* RESULTS */
+    #results { display: none; margin-top: 48px; }
+    .result-score-card {
+      background: linear-gradient(135deg, #1a0800, #111);
+      border: 1px solid #2a1400; border-radius: 16px;
+      padding: 32px; text-align: center; margin-bottom: 24px;
+    }
+    .result-score-label { color: #888; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .result-score { font-size: 80px; font-weight: 800; color: var(--orange); line-height: 1; }
+    .result-score span { font-size: 28px; color: #555; }
+    .result-summary { color: #ccc; font-size: 1rem; line-height: 1.6; margin-top: 16px; }
+
+    .alerts-box { background: #1a0a00; border: 1px solid #3a1a00; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+    .alert-item { color: #f97316; font-size: 0.9rem; line-height: 1.5; margin-bottom: 6px; }
+    .alert-item:last-child { margin-bottom: 0; }
+
+    .result-section-title {
+      font-size: 0.8rem; font-weight: 700; color: #666;
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
+    }
+
+    .timeline { margin-bottom: 32px; }
+    .timeline-item { display: flex; gap: 16px; margin-bottom: 16px; position: relative; }
+    .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--orange); flex-shrink: 0; margin-top: 4px; }
+    .timeline-content { flex: 1; background: #111; border: 1px solid #1f1f1f; border-radius: 12px; padding: 16px; }
+    .timeline-time { color: var(--orange); font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+    .timeline-activity { color: var(--white); font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+    .timeline-reason { color: #666; font-size: 0.85rem; line-height: 1.4; }
+    .category-badge {
+      display: inline-block; font-size: 0.7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .cat-deep_work { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .cat-light_work { background: rgba(34,197,94,0.1); color: #4ade80; }
+    .cat-gym { background: rgba(232,93,4,0.15); color: var(--orange); }
+    .cat-rest { background: rgba(148,163,184,0.1); color: #94a3b8; }
+    .cat-social { background: rgba(250,204,21,0.1); color: #fbbf24; }
+    .cat-food { background: rgba(52,211,153,0.1); color: #34d399; }
+    .cat-recovery { background: rgba(167,139,250,0.1); color: #a78bfa; }
+
+    .tip-box { background: rgba(232,93,4,0.08); border: 1px solid rgba(232,93,4,0.2); border-radius: 12px; padding: 16px; margin-bottom: 32px; }
+    .tip-box p { color: #ccc; font-size: 0.95rem; line-height: 1.5; }
+
+    .retry-btn {
+      background: transparent; color: var(--orange);
+      border: 1px solid var(--orange); border-radius: 10px;
+      padding: 12px 24px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; margin-top: 8px;
+    }
+    .retry-btn:hover { background: var(--orange); color: #fff; }
+
+    /* LOADING */
+    .loading-state { text-align: center; padding: 48px 0; }
+    .spinner { width: 40px; height: 40px; border: 3px solid #1f1f1f; border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #666; font-size: 0.95rem; }
+
+    /* FOOTER */
+    footer { border-top: 1px solid #1f1f1f; padding: 3rem 2rem; text-align: center; margin-top: 80px; }
+    .footer-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1rem; text-decoration: none; color: var(--white); }
+    footer nav a { color: #666; text-decoration: none; font-size: 0.88rem; margin: 0 1rem; transition: color 0.2s; }
+    footer nav a:hover { color: var(--orange); }
+    footer p { color: #444; font-size: 0.82rem; }
+
+    @media (max-width: 768px) {
+      nav ul { display: none; }
+      .hamburger { display: flex; }
+      nav ul.open { display: flex; position: fixed; top: 64px; left: 0; right: 0; background: var(--black); flex-direction: column; padding: 1.5rem; gap: 1rem; border-bottom: 1px solid #1f1f1f; }
+      .schedule-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <svg width="32" height="32" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="8" fill="#E85D04"/>
+      <polyline points="4,18 9,18 12,10 16,26 20,14 23,21 26,18 32,18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="logo-text">Energy<span>OS</span></span>
+  </a>
+  <ul id="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="checkin.html" class="nav-cta active">Try It Free</a></li>
+  </ul>
+  <div class="hamburger" onclick="document.getElementById('nav-links').classList.toggle('open')">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <div id="form-section">
+    <div style="text-align:center; margin-bottom: 40px;">
+      <div style="display:inline-block; background: rgba(232,93,4,0.1); border: 1px solid rgba(232,93,4,0.2); border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; color: var(--orange); font-weight: 600; margin-bottom: 16px;">⚡ AI-POWERED CHECK-IN</div>
+      <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 12px;">How's your energy<br>right <span style="color:var(--orange)">now?</span></h1>
+      <p style="color: #666; font-size: 1rem; max-width: 480px; margin: 0 auto;">Answer honestly. EnergyOS will analyze your data and build a personalized schedule for your day.</p>
+    </div>
+
+    <div class="progress-header">
+      <span class="progress-label" id="progress-label">Section 1 of 6</span>
+      <span class="progress-label" id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <form id="checkin-form">
+
+      <!-- SECTION 1: HOW YOU FEEL -->
+      <div class="form-section" data-section="1">
+        <div class="section-header">
+          <span class="section-icon">⚡</span>
+          <div>
+            <div class="section-title">How You Feel Right Now</div>
+            <div class="section-subtitle">Be honest — this drives everything else</div>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Energy level</div>
+          <div class="question-hint">1 = exhausted, 10 = fully locked in</div>
+          <div class="scale-wrap" id="scale-energy"></div>
+          <div class="scale-ends"><span>Exhausted</span><span>Locked in</span></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Mood</div>
+          <div class="question-hint">1 = really low, 10 = great headspace</div>
+          <div class="scale-wrap" id="scale-mood"></div>
+          <div class="scale-ends"><span>Low</span><span>Great</span></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Stress level</div>
+          <div class="question-hint">1 = totally calm, 10 = overwhelmed</div>
+          <div class="scale-wrap" id="scale-stress"></div>
+          <div class="scale-ends"><span>Calm</span><span>Overwhelmed</span></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Focus sharpness</div>
+          <div class="question-hint">1 = can't concentrate, 10 = dialed in</div>
+          <div class="scale-wrap" id="scale-focus"></div>
+          <div class="scale-ends"><span>Scattered</span><span>Dialed in</span></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Heart rate <span class="optional-tag">Optional</span></div>
+          <div class="question-hint">Check your Apple Watch or fitness tracker</div>
+          <input type="number" class="number-input" id="input-bpm" placeholder="e.g. 72" min="40" max="200" />
+          <div style="color:#555; font-size:0.8rem; margin-top:8px;">BPM</div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: SLEEP -->
+      <div class="form-section" data-section="2">
+        <div class="section-header">
+          <span class="section-icon">😴</span>
+          <div>
+            <div class="section-title">Last Night's Sleep</div>
+            <div class="section-subtitle">Sleep is the #1 energy driver</div>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Hours of sleep</div>
+          <div class="scale-wrap" id="scale-sleepHours" data-max="12"></div>
+          <div class="scale-ends"><span>1hr</span><span>12hrs</span></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Sleep quality</div>
+          <div class="choice-wrap" id="choice-sleepQuality" data-options="Terrible|Restless|OK|Good|Deep &amp; restful"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">How did you wake up?</div>
+          <div class="choice-wrap" id="choice-wokeUpFeeling" data-options="Groggy &amp; tired|Sluggish|Neutral|Refreshed|Energized"></div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: FOOD & HYDRATION -->
+      <div class="form-section" data-section="3">
+        <div class="section-header">
+          <span class="section-icon">🍽️</span>
+          <div>
+            <div class="section-title">Food & Hydration</div>
+            <div class="section-subtitle">Fueling affects energy more than most people realize</div>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Last meal</div>
+          <div class="choice-wrap" id="choice-lastMeal" data-options="Haven't eaten yet|Light snack|Healthy &amp; balanced|Heavy meal|Fast food / junk"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">When did you last eat?</div>
+          <div class="choice-wrap" id="choice-lastMealWhen" data-options="Just now|Within 1 hour|1–3 hours ago|3–6 hours ago|6+ hours ago"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Hydration level</div>
+          <div class="choice-wrap" id="choice-hydration" data-options="Very dehydrated|Thirsty|OK|Well hydrated"></div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: SUBSTANCES -->
+      <div class="form-section" data-section="4">
+        <div class="section-header">
+          <span class="section-icon">☕</span>
+          <div>
+            <div class="section-title">Substances</div>
+            <div class="section-subtitle">Caffeine, nicotine, and alcohol all affect your energy windows</div>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Caffeine today?</div>
+          <div class="choice-wrap" id="choice-caffeine" data-options="None|Coffee (1 cup)|Coffee (2+ cups)|Energy drink|Tea|Pre-workout|Multiple sources"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">When was your last caffeine?</div>
+          <div class="choice-wrap" id="choice-caffeineWhen" data-options="None today|Within 1 hour|1–3 hours ago|3–6 hours ago|6+ hours ago"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Any nicotine recently?</div>
+          <div class="question-hint">Vaping, smoking, pouches — anything</div>
+          <div class="choice-wrap" id="choice-nicotine" data-options="None|Within last hour|A few hours ago|Yesterday|Not recently"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Any alcohol recently?</div>
+          <div class="question-hint">Even last night's drinks affect today's energy</div>
+          <div class="choice-wrap" id="choice-alcohol" data-options="None|1–2 drinks last night|3–4 drinks last night|5+ drinks last night|A few days ago"></div>
+        </div>
+      </div>
+
+      <!-- SECTION 5: BODY -->
+      <div class="form-section" data-section="5">
+        <div class="section-header">
+          <span class="section-icon">💪</span>
+          <div>
+            <div class="section-title">Body & Recovery</div>
+            <div class="section-subtitle">Physical state determines what activities make sense today</div>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">How does your body feel?</div>
+          <div class="choice-wrap" id="choice-physicalFeeling" data-options="Sore / in pain|Stiff|Neutral|Loose &amp; good|Strong &amp; ready"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Are you sick or unwell?</div>
+          <div class="choice-wrap" id="choice-sick" data-options="Yes, feeling sick|Slightly off|No, feeling healthy"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">When was your last workout?</div>
+          <div class="choice-wrap" id="choice-lastWorkout" data-options="Today|Yesterday|2 days ago|3+ days ago|Haven't worked out recently"></div>
+        </div>
+      </div>
+
+      <!-- SECTION 6: SCHEDULE + CONTEXT -->
+      <div class="form-section" data-section="6">
+        <div class="section-header">
+          <span class="section-icon">📅</span>
+          <div>
+            <div class="section-title">Your Schedule & Context</div>
+            <div class="section-subtitle">So AI can work around your fixed commitments</div>
+          </div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Social battery</div>
+          <div class="question-hint">How much do you feel like being around people?</div>
+          <div class="choice-wrap" id="choice-socialBattery" data-options="Completely drained|Low|Neutral|Open to it|Craving social time"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Motivation to be productive?</div>
+          <div class="choice-wrap" id="choice-motivation" data-options="Zero motivation|Low|Moderate|High|Ready to crush it"></div>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Wake up time <span class="optional-tag">Optional</span></div>
+          <input type="text" class="schedule-input" id="input-wakeTime" placeholder="e.g. 7:00 AM" style="width:180px;" />
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Bedtime <span class="optional-tag">Optional</span></div>
+          <input type="text" class="schedule-input" id="input-sleepTime" placeholder="e.g. 11:00 PM" style="width:180px;" />
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Fixed commitments today <span class="optional-tag">Optional</span></div>
+          <div class="question-hint">Classes, work shifts, meetings — anything locked in</div>
+          <textarea class="text-input" id="input-commitments" placeholder="e.g. Class 9-10:30am, Work 2-6pm..." style="min-height:80px;"></textarea>
+        </div>
+
+        <div class="question-group">
+          <div class="question-label">Anything else? <span class="optional-tag">Optional</span></div>
+          <div class="question-hint">Medication, big life event, anxiety, bad news — anything affecting you</div>
+          <textarea class="text-input" id="input-notes" placeholder="Type anything here..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn">
+          ⚡ Analyze My Energy
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading-state" style="display:none;">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div class="loading-text">Analyzing your energy data...</div>
+      <div style="color:#444; font-size:0.82rem; margin-top:8px;">Building your personalized schedule</div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div style="text-align:center; margin-bottom: 32px;">
+      <div style="display:inline-block; background: rgba(232,93,4,0.1); border: 1px solid rgba(232,93,4,0.2); border-radius: 20px; padding: 6px 16px; font-size: 0.8rem; color: var(--orange); font-weight: 600; margin-bottom: 12px;">⚡ YOUR RESULTS</div>
+      <h2 style="font-size:1.8rem; font-weight:800;">Your Energy Report</h2>
+    </div>
+
+    <div class="result-score-card">
+      <div class="result-score-label">Energy Score</div>
+      <div class="result-score" id="result-score">--<span>/100</span></div>
+      <div class="result-summary" id="result-summary"></div>
+    </div>
+
+    <div id="result-alerts"></div>
+
+    <div id="result-tip-wrap">
+      <div class="tip-box">
+        <div class="result-section-title">💡 Today's Tip</div>
+        <p id="result-tip"></p>
+      </div>
+    </div>
+
+    <div class="result-section-title">📅 Your Schedule for Today</div>
+    <div class="timeline" id="result-schedule"></div>
+
+    <button class="retry-btn" onclick="resetForm()">← Do another check-in</button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="index.html" class="footer-logo">
+    <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="8" fill="#E85D04"/>
+      <polyline points="4,18 9,18 12,10 16,26 20,14 23,21 26,18 32,18" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span style="font-size:1.2rem;font-weight:800;">Energy<span style="color:#E85D04">OS</span></span>
+  </a>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="how-it-works.html">How It Works</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <p>&copy; 2026 EnergyOS. Built by Josh Virostek. All rights reserved.</p>
+</footer>
+
+<script>
+  const answers = {};
+  const totalSections = 6;
+
+  // Build scale buttons
+  document.querySelectorAll('[id^="scale-"]').forEach(wrap => {
+    const key = wrap.id.replace('scale-', '');
+    const max = parseInt(wrap.dataset.max) || 10;
+    for (let i = 1; i <= max; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'scale-btn';
+      btn.textContent = i;
+      btn.onclick = () => {
+        wrap.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        answers[key] = i;
+        updateProgress();
+      };
+      wrap.appendChild(btn);
+    }
+  });
+
+  // Build choice buttons
+  document.querySelectorAll('[id^="choice-"]').forEach(wrap => {
+    const key = wrap.id.replace('choice-', '');
+    const options = wrap.dataset.options.split('|');
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'choice-btn';
+      btn.textContent = opt;
+      btn.onclick = () => {
+        wrap.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        answers[key] = opt;
+        updateProgress();
+      };
+      wrap.appendChild(btn);
+    });
+  });
+
+  function updateProgress() {
+    const required = ['energy','mood','stress','focus','sleepHours','sleepQuality','wokeUpFeeling','lastMeal','lastMealWhen','hydration','caffeine','caffeineWhen','nicotine','alcohol','physicalFeeling','sick','lastWorkout','socialBattery','motivation'];
+    const filled = required.filter(k => answers[k] !== undefined).length;
+    const pct = Math.round((filled / required.length) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+    const section = Math.min(6, Math.floor(filled / (required.length / 6)) + 1);
+    document.getElementById('progress-label').textContent = `Section ${section} of ${totalSections}`;
+  }
+
+  document.getElementById('checkin-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const required = ['energy','mood','stress','focus','sleepHours','sleepQuality','wokeUpFeeling','lastMeal','lastMealWhen','hydration','caffeine','caffeineWhen','nicotine','alcohol','physicalFeeling','sick','lastWorkout','socialBattery','motivation'];
+    const missing = required.filter(k => answers[k] === undefined);
+    if (missing.length > 0) {
+      alert(`Please answer all required questions before submitting. (${missing.length} remaining)`);
+      return;
+    }
+
+    const checkin = {
+      ...answers,
+      bpm: document.getElementById('input-bpm').value || null,
+      notes: document.getElementById('input-notes').value || '',
+    };
+
+    const schedule = {
+      wakeTime: document.getElementById('input-wakeTime').value || 'Not specified',
+      sleepTime: document.getElementById('input-sleepTime').value || 'Not specified',
+      commitments: document.getElementById('input-commitments').value || '',
+    };
+
+    document.getElementById('form-section').style.display = 'none';
+    document.getElementById('loading-state').style.display = 'block';
+
+    try {
+      const res = await fetch('/api/energy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkin, schedule }),
+      });
+
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+      showResults(data);
+    } catch (err) {
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('form-section').style.display = 'block';
+      alert('Something went wrong. Please try again.');
+    }
+  });
+
+  function showResults(data) {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    document.getElementById('result-score').innerHTML = `${data.score}<span>/100</span>`;
+    document.getElementById('result-summary').textContent = data.summary;
+    document.getElementById('result-tip').textContent = data.tip;
+
+    // Alerts
+    const alertsEl = document.getElementById('result-alerts');
+    if (data.alerts && data.alerts.length > 0) {
+      alertsEl.innerHTML = `<div class="alerts-box">${data.alerts.map(a => `<div class="alert-item">⚠️ ${a}</div>`).join('')}</div>`;
+    } else {
+      alertsEl.innerHTML = '';
+    }
+
+    // Schedule
+    const scheduleEl = document.getElementById('result-schedule');
+    scheduleEl.innerHTML = data.schedule.map(item => `
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-content">
+          <div class="category-badge cat-${item.category}">${item.category.replace('_', ' ')}</div>
+          <div class="timeline-time">${item.time}</div>
+          <div class="timeline-activity">${item.activity}</div>
+          <div class="timeline-reason">${item.reason}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function resetForm() {
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('form-section').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
