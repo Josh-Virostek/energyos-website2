@@ -90,18 +90,26 @@ Respond in this exact JSON format only, no markdown:
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
 
     const data = await response.json();
+
+    if (!response.ok || !data.content || !data.content[0]) {
+      return res.status(500).json({ error: 'Anthropic API error', detail: JSON.stringify(data) });
+    }
+
     const text = data.content[0].text;
     const match = text.match(/\{[\s\S]*\}/);
-    const result = JSON.parse(match ? match[0] : text);
+    if (!match) {
+      return res.status(500).json({ error: 'No JSON in response', raw: text.slice(0, 300) });
+    }
+    const result = JSON.parse(match[0]);
     res.status(200).json(result);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to get AI insights', detail: err.message });
+    res.status(500).json({ error: err.message });
   }
 }
